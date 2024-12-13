@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI股市助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.1-rc.1/echarts.min.js"
+        integrity="sha512-RaatU6zYCjTIyGwrBVsUzvbkpZq/ECxa2oYoQ+16qhQDCX9xQUEAsm437n/6TNTes94flHU4cr+ur99FKM5Vog=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <script src="{{ url_for('static', filename='stock.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='kline.js') }}" defer></script>
+    <style>
+        .chartContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 90%;
+            margin: auto;
+        }
+
+        .chart-box {
+            width: 100%;
+            height: 400px;
+        }
+
+        #indicatorSelect {
+            margin-left: 10px;
+        }
+    </style>
+
+</head>
+
+<body class="bg-gray-100 h-screen">
+
+    <div class="relative flex h-full">
+        <!-- Sidebar -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 bg-white shadow-md w-64 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-30 flex flex-col">
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-gray-800">AI股市助手</h2>
+            </div>
+            <nav class="mt-8">
+                <ul>
+                    <li>
+                        <a href="/"
+                            class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold">
+                            <span class="w-4 h-4 bg-purple-500 rounded-full mr-3"></span>首頁
+                        </a>
+                    </li>
+                    <li>
+                        <a href="stock" class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200 rounded-lg">
+                            <span class="w-4 h-4 bg-purple-500 rounded-full mr-3"></span>股票市場
+                        </a>
+                    </li>
+                    <li>
+                        <a href="aistock"
+                            class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200 rounded-lg">
+                            <span class="w-4 h-4 bg-purple-500 rounded-full mr-3"></span>股票預測
+                        </a>
+                    </li>
+                    <li>
+                        <a href="news" class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200 rounded-lg">
+                            <span class="w-4 h-4 bg-purple-500 rounded-full mr-3"></span>新聞
+                        </a>
+                    </li>
+                    <li>
+                        <a href="gpt" class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200 rounded-lg">
+                            <span class="w-4 h-4 bg-purple-500 rounded-full mr-3"></span>AI助手
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <!-- Footer Section -->
+            <div class="mt-auto p-6">
+                <div class="bg-green-100 p-4 rounded-lg mb-6">
+                    <p class="font-bold text-sm text-gray-800">溫馨小提醒</p>
+                    <span class="text-gray-600 text-xs">
+                        股票投資有賺有賠，市場波動難以預測。請謹慎評估自身的風險承受能力，保持冷靜與理性，並依據自己的判斷做出投資決策。記住，過去的績效不代表未來的表現，請避免盲目跟隨市場趨勢，做好資金配置，方能穩健前行。
+                    </span>
+                </div>
+                <!-- Logout -->
+            </div>
+        </aside>
+
+
+        <!-- Overlay (Hidden by Default) -->
+        <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-20 md:hidden"></div>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col md:ml-64">
+            <!-- Navbar -->
+            <header class="bg-white shadow-md py-4 px-6 flex justify-between items-center">
+                <button id="menuBtn" class="text-gray-600 text-2xl md:hidden focus:outline-none">
+                    ☰
+                </button>
+                <h1 class="text-lg font-bold text-gray-800"></h1>
+                <div class="flex items-center gap-4">
+
+                    <button class="text-gray-600 text-lg focus:outline-none">
+                        🔔
+                    </button>
+                    <!-- <div class="w-10 h-10 rounded-full bg-gray-300"></div> -->
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="p-6">
+                <div class="container mx-auto bg-white shadow-md rounded-md p-4 mb-4">
+                    <form id="searchForm" class="flex space-x-4">
+                        <input type="text" id="searchInput" name="searchInput" placeholder="输入股票代號/名稱"
+                            class="flex-1 p-2 border border-gray-300 rounded-md">
+                        <button type="submit" class="bg-blue-600 text-white p-2 rounded-md"
+                            id="fetchDataBtn">查詢</button>
+                    </form>
+                </div>
+                <!-- Example Content -->
+                <div class="bg-white shadow-md rounded-lg p-4 flex justify-between items-center flex-wrap"
+                    id="stock-title">
+                    <!-- 左側股票資訊 -->
+                    <div class="flex-wrap">
+                        <div class="flex items-baseline space-x-2">
+                            <h2 class="text-gray-800 font-bold text-lg"></h2>
+                            <span class="text-gray-500 text-sm"></span>
+                        </div>
+                        <div class="text-red-600 font-bold text-3xl mt-2">
+                            <span class="text-red-600 text-lg font-normal"></span>
+                        </div>
+                        <div class="text-gray-500 text-sm mt-1"></div>
+                    </div>
+
+                    <!-- 右側成交量與本益比 -->
+                    <div class="text-right flex items-center justify-between flex-nowrap mt-4">
+                        <div class="mr-3">
+                            <div class="text-gray-800 text-lg font-bold"></div>
+                            <div class="text-gray-500 text-sm"></div>
+                        </div>
+                        <div class="ml-3">
+                            <div class="">
+                                <span class="text-gray-800 text-lg font-bold"></span>
+                                <span class="text-gray-500 text-sm"></span>
+                            </div>
+                            <div class="text-gray-500 text-sm"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 grid grid-cols-3 gap-6 flex flex-nowrap">
+                    <div class="col-span-3 md:col-span-2 bg-white shadow-md rounded-lg p-6">
+                        <h2 class="text-lg font-bold text-gray-800">走勢圖</h2>
+                        <div class="chartContainer">
+                            <div>
+                                <div id="trendChart" class="chart-box"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-3 md:col-span-1 bg-white shadow-md rounded-lg p-6" id="stock-data">
+                        <!-- 成交數據區 -->
+                        <div class="grid grid-cols-2 gap-4 text-gray-800 text-sm">
+                            <div>
+                                <p>成交</p>
+                                <p class="font-bold text-red-600"></p>
+                            </div>
+                            <div>
+                                <p>昨收</p>
+                                <p class="font-bold text-gray-800"></p>
+                            </div>
+                            <div>
+                                <p>開盤</p>
+                                <p class="font-bold text-red-600"></p>
+                            </div>
+                            <div>
+                                <p>漲跌幅</p>
+                                <p class="font-bold text-red-600"></p>
+                            </div>
+                            <div>
+                                <p>最高</p>
+                                <p class="font-bold text-red-600"></p>
+                            </div>
+                            <div>
+                                <p>漲跌</p>
+                                <p class="font-bold text-red-600"></p>
+                            </div>
+                            <div>
+                                <p>最低</p>
+                                <p class="font-bold text-red-600"></p>
+                            </div>
+                            <div>
+                                <p>總量</p>
+                                <p class="font-bold text-gray-800"></p>
+                            </div>
+                            <div>
+                                <p>均價</p>
+                                <p class="font-bold text-gray-800"></p>
+                            </div>
+                            <div>
+                                <p>昨量</p>
+                                <p class="font-bold text-gray-800"></p>
+                            </div>
+                            <div>
+                                <p>成交金額(億)</p>
+                                <p class="font-bold text-gray-800"></p>
+                            </div>
+                            <div>
+                                <p>振幅</p>
+                                <p class="font-bold text-gray-800"></p>
+                            </div>
+                        </div>
+
+                        <!-- 內外盤對比條 -->
+                        <div class="mt-6">
+                            <div class="flex justify-between items-center">
+                                <p class="text-green-600 font-bold">內盤 </p>
+                                <p class="text-red-600 font-bold">外盤 </p>
+                            </div>
+                            <div class="relative w-full bg-gray-200 h-2 rounded-full mt-2">
+                                <div class="absolute left-0 h-2 bg-green-500 rounded-l-full" style="width: 50%;">
+                                </div>
+                                <div class="absolute right-0 h-2 bg-red-500 rounded-r-full" style="width: 50%;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 委託買賣表 -->
+                        <div class="bg-white shadow-md rounded-lg p-6">
+                            <!-- 委託買賣表 -->
+                            <div class="mt-6 grid grid-cols-4 gap-4 text-sm">
+                                <!-- 買盤量 -->
+                                <div>
+                                    <p class="text-center text-gray-600">量</p>
+                                    <ul class="space-y-1">
+                                        <li class="text-center"></li>
+                                        <li class="text-center"></li>
+                                        <li class="text-center"></li>
+                                        <li class="text-center"></li>
+                                        <li class="text-center"></li>
+                                    </ul>
+                                    <hr>
+                                    <p class="text-center font-bold mt-2"></p>
+                                </div>
+                                <!-- 委買價 -->
+                                <div>
+                                    <p class="text-center text-gray-600">委買價</p>
+                                    <ul class="space-y-1">
+                                        <li class="text-center bg-blue-100 rounded"></li>
+                                        <li class="text-center bg-blue-100 rounded"></li>
+                                        <li class="text-center bg-blue-100 rounded"></li>
+                                        <li class="text-center bg-blue-100 rounded"></li>
+                                        <li class="text-center bg-blue-100 rounded"></li>
+                                    </ul>
+                                </div>
+                                <!-- 委賣價 -->
+                                <div>
+                                    <p class="text-center text-gray-600">委賣價</p>
+                                    <ul class="space-y-1">
+                                        <li class="text-center bg-blue-100 rounded"></li>
+                                        <li class="text-center bg-blue-100 rounded"></li>
+                                        <li class="text-center bg-blue-100 rounded"></li>
+                                        <li class="text-center bg-blue-100 rounded"></li>
+                                        <li class="text-center bg-blue-100 rounded"></li>
+                                    </ul>
+                                </div>
+                                <!-- 賣盤量 -->
+                                <div>
+                                    <p class="text-center text-gray-600">量</p>
+                                    <ul class="space-y-1">
+                                        <li class="text-center"></li>
+                                        <li class="text-center"></li>
+                                        <li class="text-center"></li>
+                                        <li class="text-center"></li>
+                                        <li class="text-center"></li>
+                                    </ul>
+                                    <hr>
+                                    <p class="text-center font-bold mt-2"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="bg-white shadow-md rounded-lg p-6 mt-6">
+                    <!-- 標籤導航 -->
+                    <div class="flex space-x-6 border-b pb-3 mb-4">
+                        <button class="tab-button text-gray-600 hover:text-red-600" data-tab="intro">簡介</button>
+                        <button class="tab-button text-red-600 font-semibold border-b-2 border-red-600"
+                            data-tab="chart">線圖</button>
+                    </div>
+
+                    <!-- 線圖 -->
+                    <div class="tab-content" id="chart">
+                        <select id="indicatorSelect">
+                            <option value="volume">成交量</option>
+                            <option value="kdj">KDJ</option>
+                            <option value="macd">MACD</option>
+                            <option value="rsi">RSI</option>
+                            <option value="bias">乖離率</option>
+                            <option value="wr">威廉指標</option>
+                            <option value="cdp">CDP</option>
+                            <option value="dmi">動向指標DMI</option>
+                        </select>
+                        <div class="chartContainer">
+                            <div>
+                                <div id="mainChart" class="chart-box"></div>
+                            </div>
+                            <!-- 下方技術指標圖表區 -->
+                            <div>
+                                <div id="subChart" class="chart-box"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 簡介 -->
+                    <div class="tab-content hidden" id="intro">
+                        <h1 class="text-xl font-bold text-red-600 mb-2">公司簡介</h1>
+                        <h2 class="text-lg font-semibold text-gray-800" id="intro-name"></h2>
+                        <p class="text-sm text-gray-600 italic mb-4" id="intro-english"></p>
+
+                        <!-- 公司高層與基本資料 -->
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p>董事長</p>
+                                <p class="font-bold text-gray-800" id="intro-owner"></p>
+                            </div>
+                            <div>
+                                <p>總經理</p>
+                                <p class="font-bold text-gray-800" id="intro-ceo"></p>
+                            </div>
+                            <div>
+                                <p>發言人</p>
+                                <p class="font-bold text-gray-800" id="intro-say"></p>
+                            </div>
+                            <div>
+                                <p>成立日期</p>
+                                <p class="font-bold text-gray-800" id="intro-day"></p>
+                            </div>
+                            <div>
+                                <p>上市日期</p>
+                                <p class="font-bold text-gray-800" id="intro-up"></p>
+                            </div>
+                            <div>
+                                <p>資本額</p>
+                                <p class="font-bold text-gray-800" id="intro-money"></p>
+                            </div>
+                        </div>
+
+                        <!-- 基本資料 -->
+                        <h3 class="mt-6 mb-2 text-lg font-semibold text-gray-800">基本資料</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded-lg">
+                            <!-- <div>
+                                <p>通訊機構</p>
+                                <p class="font-bold text-gray-800">緯創資通股份有限公司股務室</p>
+                            </div> -->
+                            <div>
+                                <p>公司地址</p>
+                                <p class="font-bold text-gray-800" id="intro-addr"></p>
+                            </div>
+                            <div>
+                                <p>通訊地址</p>
+                                <p class="font-bold text-gray-800" id="intro-call"></p>
+                            </div>
+                            <div>
+                                <p>公司電話</p>
+                                <p class="font-bold text-gray-800" id="intro-phone"></p>
+                            </div>
+                            <div>
+                                <p>通訊電話</p>
+                                <p class="font-bold text-gray-800" id="intro-callphone"></p>
+                            </div>
+                            <div>
+                                <p>電子郵件</p>
+                                <p class="font-bold text-gray-800" id="intro-email"></p>
+                            </div>
+                            <!-- <div>
+                                <p>主要經營業務</p>
+                                <p class="font-bold text-gray-800">3C電子產品、其他。</p>
+                            </div> -->
+                        </div>
+
+                        <!-- 服務資訊 -->
+                        <!-- <h3 class="mt-6 mb-2 text-lg font-semibold text-gray-800">服務資訊</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded-lg">
+                            <div>
+                                <p>實收資本額</p>
+                                <p class="font-bold text-gray-800">289.67 億</p>
+                            </div>
+                            <div>
+                                <p>人均持股</p>
+                                <p class="font-bold text-gray-800">7,379.5111 股</p>
+                            </div>
+                            <div>
+                                <p>已發行股數</p>
+                                <p class="font-bold text-gray-800">28.97 億股</p>
+                            </div>
+                            <div>
+                                <p>外資持股</p>
+                                <p class="font-bold text-gray-800">23.76%</p>
+                            </div>
+                            <div>
+                                <p>股東人數</p>
+                                <p class="font-bold text-gray-800">392,542 人</p>
+                            </div>
+                            <div>
+                                <p>前十大持股</p>
+                                <p class="font-bold text-gray-800">3.55%</p>
+                            </div>
+                            <div>
+                                <p>特別股</p>
+                                <p class="font-bold text-gray-800">N</p>
+                            </div>
+                            <div>
+                                <p>公開發行</p>
+                                <p class="font-bold text-gray-800">Y</p>
+                            </div>
+                        </div> -->
+                    </div>
+
+
+
+
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- <script src="scripts.js"></script> -->
+    <!-- JavaScript to Toggle Sidebar and Overlay -->
+    <script>
+        const menuBtn = document.getElementById('menuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        // Function to open the sidebar
+        const openSidebar = () => {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+        };
+
+        // Function to close the sidebar
+        const closeSidebar = () => {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        };
+
+        // Toggle sidebar when the menu button is clicked
+        menuBtn.addEventListener('click', openSidebar);
+
+        // Close sidebar when overlay is clicked
+        overlay.addEventListener('click', closeSidebar);
+
+
+        // Tab 切換邏輯
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // 移除所有按鈕的選中狀態
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('text-red-600', 'font-semibold', 'border-b-2', 'border-red-600');
+                    btn.classList.add('text-gray-600');
+                });
+
+                // 隱藏所有內容區塊
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+
+                // 顯示當前選中內容區塊
+                const tab = button.getAttribute('data-tab');
+                document.getElementById(tab).classList.remove('hidden');
+
+                // 標記選中的按鈕
+                button.classList.remove('text-gray-600');
+                button.classList.add('text-red-600', 'font-semibold', 'border-b-2', 'border-red-600');
+            });
+        });
+
+    </script>
+
+</body>
+
+</html>

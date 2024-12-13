@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票预测与新闻分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{{ url_for('static', filename='oldmain.js') }}" defer></script>
+</head>
+
+<body class="bg-gray-100 text-gray-900">
+
+    <!-- 导航栏 -->
+    <nav class="bg-blue-600 p-4">
+        <div class="container mx-auto">
+            <h1 class="text-white text-2xl">股票预测与新闻分析</h1>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="container mx-auto mt-10 p-4 bg-white shadow-md rounded-md">
+        <h2 class="text-2xl font-bold mb-4">预测股票价格</h2>
+
+        <!-- 搜索栏 -->
+        <form id="searchForm" class="flex space-x-4 mb-10">
+            <input type="text" id="searchInput" name="searchInput" placeholder="输入股票名称或代码"
+                class="flex-1 p-2 border border-gray-300 rounded-md">
+            <button type="submit" class="bg-blue-600 text-white p-2 rounded-md">查询</button>
+        </form>
+    </div>
+
+    <!-- 查询结果 -->
+    <div class="container mx-auto mt-10 p-4 bg-white shadow-md rounded-md">
+        <h3 class="text-xl font-bold mb-4">查询结果</h3>
+        <div id="results">
+            <ul id="resultsList" class="space-y-4"></ul>
+        </div>
+    </div>
+
+    <!-- 已加入股票 -->
+    <div class="container mx-auto mt-10 p-4 bg-white shadow-md rounded-md">
+        <h3 class="text-xl font-bold mb-4">已加入的股票</h3>
+        <div id="addedStocks">
+            <ul id="addedStocksList" class="space-y-4"></ul>
+        </div>
+    </div>
+
+    <!-- 预测结果 -->
+    <div class="container mx-auto mt-10 p-4 bg-white shadow-md rounded-md">
+        <h3 class="text-xl font-bold mb-4">预测结果</h3>
+        <div id="predictions">
+            <table class="min-w-full bg-white">
+                <thead>
+                    <tr>
+                        <th class="py-2">股票代码</th>
+                        <th class="py-2">股票名称</th>
+                        <th class="py-2">预测结果</th>
+                    </tr>
+                </thead>
+                <tbody id="predictionsList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 新闻和分析结果 -->
+    <div class="container mx-auto mt-10 p-4 bg-white shadow-md rounded-md">
+        <h3 class="text-xl font-bold mb-4">新闻和分析结果</h3>
+        <div id="news" class="mb-4">
+            <textarea id="newsContent" rows="10" class="w-full p-2 border border-gray-300 rounded-md"
+                placeholder="在此输入或粘贴新闻内容"></textarea>
+        </div>
+        <button id="analyzeButton" class="bg-blue-600 text-white p-2 rounded-md">分析</button>
+
+        <!-- 分析结果分成左右两个栏位 -->
+        <div id="analysis" class="mt-4 grid grid-cols-2 gap-4">
+            <!-- 正面影响 -->
+            <div class="p-4 bg-green-100 border border-green-300 rounded-md">
+                <h4 class="text-lg font-bold mb-2">正面影响股票</h4>
+                <div id="positiveImpactStocks" class="p-2 bg-gray-100 border border-gray-300 rounded-md">
+                    正面影响的股票将在这里显示...</div>
+            </div>
+            <!-- 负面影响 -->
+            <div class="p-4 bg-red-100 border border-red-300 rounded-md">
+                <h4 class="text-lg font-bold mb-2">负面影响股票</h4>
+                <div id="negativeImpactStocks" class="p-2 bg-gray-100 border border-gray-300 rounded-md">
+                    负面影响的股票将在这里显示...</div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

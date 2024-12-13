@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI股市助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{{ url_for('static', filename='chatgpt.js') }}" defer></script>
+</head>
+
+<body class="bg-gray-100 h-screen">
+
+    <div class="relative flex h-full">
+        <!-- Sidebar -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 bg-white shadow-md w-64 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-30 flex flex-col">
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-gray-800">AI股市助手</h2>
+            </div>
+            <nav class="mt-8">
+                <ul>
+                    <li>
+                        <a href="/"
+                            class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold">
+                            <span class="w-4 h-4 bg-purple-500 rounded-full mr-3"></span>首頁
+                        </a>
+                    </li>
+                    <li>
+                        <a href="stock" class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200 rounded-lg">
+                            <span class="w-4 h-4 bg-purple-500 rounded-full mr-3"></span>股票市場
+                        </a>
+                    </li>
+                    <li>
+                        <a href="aistock"
+                            class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200 rounded-lg">
+                            <span class="w-4 h-4 bg-purple-500 rounded-full mr-3"></span>股票預測
+                        </a>
+                    </li>
+                    <li>
+                        <a href="news" class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200 rounded-lg">
+                            <span class="w-4 h-4 bg-purple-500 rounded-full mr-3"></span>新聞
+                        </a>
+                    </li>
+                    <li>
+                        <a href="gpt" class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200 rounded-lg">
+                            <span class="w-4 h-4 bg-purple-500 rounded-full mr-3"></span>AI助手
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <!-- Footer Section -->
+            <div class="mt-auto p-6">
+                <div class="bg-green-100 p-4 rounded-lg mb-6">
+                    <p class="font-bold text-sm text-gray-800">溫馨小提醒</p>
+                    <span class="text-gray-600 text-xs">
+                        股票投資有賺有賠，市場波動難以預測。請謹慎評估自身的風險承受能力，保持冷靜與理性，並依據自己的判斷做出投資決策。記住，過去的績效不代表未來的表現，請避免盲目跟隨市場趨勢，做好資金配置，方能穩健前行。
+                    </span>
+                </div>
+                <!-- Logout -->
+            </div>
+        </aside>
+
+
+        <!-- Overlay (Hidden by Default) -->
+        <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-20 md:hidden"></div>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col md:ml-64">
+            <!-- Navbar -->
+            <header class="bg-white shadow-md py-4 px-6 flex justify-between items-center">
+                <button id="menuBtn" class="text-gray-600 text-2xl md:hidden focus:outline-none">
+                    ☰
+                </button>
+                <h1 class="text-lg font-bold text-gray-800"></h1>
+                <div class="flex items-center gap-4">
+                    <button class="text-gray-600 text-lg focus:outline-none">
+                        🔔
+                    </button>
+                    <!-- <div class="w-10 h-10 rounded-full bg-gray-300"></div> -->
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="p-6 h-full">
+                <div class="bg-gray-100 flex h-full">
+                    <!-- 聊天室主容器 -->
+                    <div class="bg-white shadow-md rounded-lg flex flex-col h-full w-full max-h-screen">
+                        <!-- 聊天訊息顯示區 -->
+                        <div class="flex-1 overflow-y-auto space-y-4 p-4 bg-gray-50" id="chat-box">
+                            <!-- 左邊訊息 -->
+                            <div class="flex items-start space-x-2">
+                                <div
+                                    class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm">
+                                    A</div>
+                                <div class="bg-blue-100 text-gray-800 p-3 rounded-lg max-w-xs">
+                                    <p>你好！有什麼我可以幫忙的嗎？</p>
+                                </div>
+                            </div>
+
+                            <!-- 右邊訊息 -->
+                        </div>
+
+                        <!-- 輸入框 -->
+                        <div class="p-4 bg-white border-t">
+                            <form id="chat-form" class="flex items-center space-x-2">
+                                <input type="text" id="chat-input" placeholder="輸入訊息..."
+                                    class="flex-1 p-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-200" />
+                                <button type="submit"
+                                    class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                                    發送
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript to Toggle Sidebar and Overlay -->
+    <script>
+        const menuBtn = document.getElementById('menuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        // Function to open the sidebar
+        const openSidebar = () => {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+        };
+
+        // Function to close the sidebar
+        const closeSidebar = () => {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        };
+
+        // Toggle sidebar when the menu button is clicked
+        menuBtn.addEventListener('click', openSidebar);
+
+        // Close sidebar when overlay is clicked
+        overlay.addEventListener('click', closeSidebar);
+    </script>
+
+</body>
+
+</html>

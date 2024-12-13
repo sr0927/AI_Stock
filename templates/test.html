@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>大盤走勢圖範例</title>
+    <!-- 引入 ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #info {
+            margin-bottom: 20px;
+        }
+
+        #chart {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>大盤走勢圖</h1>
+    <div id="info">
+        <div>
+            <span id="indexValue" style="font-size:2em;font-weight:bold;color:green;"></span>
+            <span id="changeInfo" style="font-size:1em;margin-left:10px;"></span>
+        </div>
+        <div>
+            <span>開盤: <span id="openPrice"></span></span>
+            <span>　最高: <span id="highPrice"></span></span>
+            <span>　最低: <span id="lowPrice"></span></span>
+            <span>　昨收: <span id="prevClose"></span></span>
+        </div>
+    </div>
+
+    <div id="chart"></div>
+
+    <script>
+        async function fetchMarketData() {
+            const res = await fetch('/market_data');
+            const data = await res.json();
+            return data;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const data = await fetchMarketData();
+            if (data.length === 0) {
+                // 若無資料，可顯示提示
+                document.getElementById('info').innerText = '目前無可用資料(非交易時間?)';
+                return;
+            }
+
+            // 整理資料
+            const dates = data.map(d => d.timestamp);
+            const closes = data.map(d => d.close);
+            const volumes = data.map(d => d.volume);
+
+            // 假設第一筆資料作為昨收參考(實務中應該從前一交易日收盤取得)
+            const first = data[0];
+            const latest = data[data.length - 1];
+            const prevClose = first.close;
+            const openPrice = data[0].open; // 開盤通常為第一筆資料的Open
+            const highPrice = Math.max(...data.map(d => d.high));
+            const lowPrice = Math.min(...data.map(d => d.low));
+
+            // 計算最新漲跌
+            const change = (latest.close - prevClose);
+            const changePercent = (change / prevClose) * 100;
+
+            // 更新頁面上的資訊
+            document.getElementById('indexValue').textContent = latest.close.toFixed(2);
+            document.getElementById('openPrice').textContent = openPrice.toFixed(2);
+            document.getElementById('highPrice').textContent = highPrice.toFixed(2);
+            document.getElementById('lowPrice').textContent = lowPrice.toFixed(2);
+            document.getElementById('prevClose').textContent = prevClose.toFixed(2);
+
+            let sign = change >= 0 ? '▲' : '▼';
+            let color = change >= 0 ? 'red' : 'green';
+            document.getElementById('changeInfo').textContent = `${sign}${Math.abs(change).toFixed(2)} (${sign}${Math.abs(changePercent).toFixed(2)}%)`;
+            document.getElementById('changeInfo').style.color = color;
+            document.getElementById('indexValue').style.color = color;
+
+            // 繪製圖表
+            const chartDom = document.getElementById('chart');
+            const myChart = echarts.init(chartDom);
+
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'cross' }
+                },
+                legend: { data: ['指數', '成交量'] },
+                xAxis: {
+                    type: 'category',
+                    data: dates,
+                    axisLabel: {
+                        formatter: function (value) {
+                            // 格式化時間顯示(假設timestamp為"YYYY-MM-DD HH:MM:SS")
+                            const t = new Date(value);
+                            return t.getHours() + ':' + String(t.getMinutes()).padStart(2, '0');
+                        }
+                    }
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        scale: true,
+                        name: '指數',
+                        position: 'left'
+                    },
+                    {
+                        type: 'value',
+                        scale: true,
+                        name: '成交量',
+                        position: 'right'
+                    }
+                ],
+                series: [
+                    {
+                        name: '指數',
+                        type: 'line',
+                        data: closes,
+                        yAxisIndex: 0,
+                        lineStyle: { color: 'blue' },
+                        symbol: 'none'
+                    },
+                    {
+                        name: '成交量',
+                        type: 'bar',
+                        data: volumes,
+                        yAxisIndex: 1,
+                        itemStyle: { color: 'green' }
+                    }
+                ],
+                grid: { left: '10%', right: '10%', bottom: '10%' }
+            };
+
+            myChart.setOption(option);
+        });
+    </script>
+</body>
+
+</html>
