@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI股市助手</title>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
     <script src="{{ url_for('static', filename='index.js') }}" defer></script>
@@ -25,28 +26,28 @@
                     <li>
                         <a href="/"
                             class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold">
-                            <span class="w-4 h-4 bg-purple-500 rounded-full mr-3"></span>首頁
+                            <i class="fa fa-home mr-3" aria-hidden="true"></i>首頁
                         </a>
                     </li>
                     <li>
                         <a href="stock" class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200 rounded-lg">
-                            <span class="w-4 h-4 bg-purple-500 rounded-full mr-3"></span>股票市場
+                            <i class="fa fa-info-circle mr-3" aria-hidden="true"></i>股票市場
                         </a>
                     </li>
                     <li>
                         <a href="aistock"
                             class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200 rounded-lg">
-                            <span class="w-4 h-4 bg-purple-500 rounded-full mr-3"></span>股票預測
+                            <i class="fa fa-line-chart mr-2" aria-hidden="true"></i>股票預測
                         </a>
                     </li>
                     <li>
                         <a href="news" class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200 rounded-lg">
-                            <span class="w-4 h-4 bg-purple-500 rounded-full mr-3"></span>新聞
+                            <i class="fa fa-bullhorn mr-3" aria-hidden="true"></i>新聞
                         </a>
                     </li>
                     <li>
                         <a href="gpt" class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200 rounded-lg">
-                            <span class="w-4 h-4 bg-purple-500 rounded-full mr-3"></span>AI助手
+                            <i class="fa fa-user mr-4" aria-hidden="true"></i>AI助手
                         </a>
                     </li>
                 </ul>
